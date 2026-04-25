@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Virtual Lab on Electrical Circuit — An interactive platform for engineering students to learn and solve RC, RL, and RLC circuit equations step-by-step with guided verification.">
+    <title>Virtual Lab on Electrical Circuit</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- KaTeX CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav id="navbar" class="navbar">
+        <div class="nav-container">
+            <a href="#home" class="nav-logo" id="nav-logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">Virtual Lab</span>
+            </a>
+            <div class="nav-links" id="navLinks">
+                <a href="#home" class="nav-link active" data-page="home">Home</a>
+                <a href="#aim" class="nav-link" data-page="aim">Aim</a>
+                <a href="#theory" class="nav-link" data-page="theory">Theory</a>
+                <a href="#simulation" class="nav-link" data-page="simulation">Simulation</a>
+                <a href="#test" class="nav-link" data-page="test">Test</a>
+                <a href="#references" class="nav-link" data-page="references">References</a>
+                <a href="#contributors" class="nav-link" data-page="contributors">Team</a>
+                <a href="#feedback" class="nav-link" data-page="feedback">Feedback</a>
+                <a href="#contact" class="nav-link" data-page="contact">Contact</a>
+            </div>
+            <div class="nav-actions">
+                <label id="themeToggle" class="theme-switch" aria-label="Toggle theme">
+                    <input type="checkbox" id="themeCheckbox">
+                    <span class="theme-slider">
+                        <span class="theme-slider-icon sun">☀️</span>
+                        <span class="theme-slider-icon moon">🌙</span>
+                    </span>
+                </label>
+                <button id="menuToggle" class="menu-toggle" aria-label="Toggle menu">
+                    <span class="hamburger"></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="app">
+        <section id="page-home" class="page active"></section>
+        <section id="page-aim" class="page"></section>
+        <section id="page-theory" class="page"></section>
+        <section id="page-simulation" class="page"></section>
+        <section id="page-test" class="page"></section>
+        <section id="page-references" class="page"></section>
+        <section id="page-contributors" class="page"></section>
+        <section id="page-feedback" class="page"></section>
+        <section id="page-contact" class="page"></section>
+    </main>
+
+    <!-- Footer -->
+    <footer id="footer" class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-brand">
+                    <span class="logo-icon">⚡</span>
+                    <span class="logo-text">Virtual Lab on Electrical Circuit</span>
+                </div>
+                <p class="footer-tagline">An interactive learning platform for engineering students to master circuit
+                    analysis through guided problem solving.</p>
+            </div>
+            <div class="footer-links">
+                <div class="footer-col">
+                    <h4>Learn</h4>
+                    <a href="#theory">Theory</a>
+                    <a href="#simulation">Simulation</a>
+                    <a href="#test">Take Test</a>
+                </div>
+                <div class="footer-col">
+                    <h4>About</h4>
+                    <a href="#aim">Aim</a>
+                    <a href="#contributors">Contributors</a>
+                    <a href="#references">References</a>
+                </div>
+                <div class="footer-col">
+                    <h4>Connect</h4>
+                    <a href="#feedback">Feedback</a>
+                    <a href="#contact">Contact Us</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Virtual Lab on Electrical Circuit. Built for academic learning by engineering students.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@12.2.1/lib/browser/math.js"></script>
+    <script src="js/circuit-diagram.js"></script>
+    <script src="js/pages.js"></script>
+    <script src="js/simulation.js"></script>
+    <script src="js/quiz.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
