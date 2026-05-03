@@ -71,7 +71,9 @@ const Simulation = {
         if (this.type !== 'RL' && this.values.C <= 0) { alert('Please enter a valid positive value for C.'); return; }
 
         this.currentStep = 0;
-        this.scores = [0, 0, 0, 0];
+        const steps = this.getStepDefinitions();
+        this.totalSteps = steps.length;
+        this.scores = new Array(this.totalSteps).fill(0);
         this.started = true;
         document.getElementById('simWorkspace').style.display = 'block';
         this.showEquation();
@@ -110,16 +112,57 @@ const Simulation = {
             // RLC
             const disc = R*R - 4*L/C;
             const alpha = R / (2*L);
-            let caseType = disc > 0.001 ? 'overdamped' : (disc < -0.001 ? 'underdamped' : 'critical');
+            let caseType = disc > 0.001 ? 'overdamped' : (disc < -0.001 ? 'underdamped' : 'critically damped');
+            
+            let s1_val, s2_val, s1_str, s2_str, roots_ans, roots_sol;
+            let expectedQc, qc_ans, qc_sol;
+            
+            if (disc > 0.001) {
+                s1_val = (-R + Math.sqrt(disc)) / (2*L);
+                s2_val = (-R - Math.sqrt(disc)) / (2*L);
+                s1_str = s1_val.toFixed(4);
+                s2_str = s2_val.toFixed(4);
+                roots_ans = `${s1_str}, ${s2_str}`;
+                roots_sol = `<p>Discriminant \\(\\Delta = R^2 - 4L/C = ${disc.toFixed(4)}\\). Since \\(\\Delta > 0\\), roots are real and distinct.</p><div class="equation-highlight">$$s_1 = ${s1_str}, s_2 = ${s2_str}$$</div>`;
+                expectedQc = `C1*exp(${s1_val}*t) + C2*exp(${s2_val}*t)`;
+                qc_ans = `C1*e^(${s1_str}*t) + C2*e^(${s2_str}*t)`;
+                qc_sol = `<div class="equation-highlight">$$Q_c(t) = C_1 e^{${s1_str}t} + C_2 e^{${s2_str}t}$$</div>`;
+            } else if (disc < -0.001) {
+                const beta = Math.sqrt(-disc) / (2*L);
+                s1_str = `${(-alpha).toFixed(4)} + ${beta.toFixed(4)}i`;
+                s2_str = `${(-alpha).toFixed(4)} - ${beta.toFixed(4)}i`;
+                roots_ans = `${s1_str}, ${s2_str}`;
+                s1_val = math.complex(-alpha, beta);
+                s2_val = math.complex(-alpha, -beta);
+                roots_sol = `<p>Discriminant \\(\\Delta = R^2 - 4L/C = ${disc.toFixed(4)}\\). Since \\(\\Delta < 0\\), roots are complex conjugates.</p><div class="equation-highlight">$$s_1, s_2 = ${(-alpha).toFixed(4)} \\pm ${beta.toFixed(4)}i$$</div>`;
+                expectedQc = `exp(${-alpha}*t)*(C1*cos(${beta}*t) + C2*sin(${beta}*t))`;
+                qc_ans = `e^(${(-alpha).toFixed(4)}*t)*(C1*cos(${beta.toFixed(4)}*t) + C2*sin(${beta.toFixed(4)}*t))`;
+                qc_sol = `<div class="equation-highlight">$$Q_c(t) = e^{${(-alpha).toFixed(4)}t} (C_1 \\cos(${beta.toFixed(4)}t) + C_2 \\sin(${beta.toFixed(4)}t))$$</div>`;
+            } else {
+                s1_val = -R / (2*L);
+                s2_val = s1_val;
+                s1_str = s1_val.toFixed(4);
+                s2_str = s1_str;
+                roots_ans = `${s1_str}, ${s2_str}`;
+                roots_sol = `<p>Discriminant \\(\\Delta = R^2 - 4L/C \\approx 0\\). Roots are real and repeated.</p><div class="equation-highlight">$$s_1 = s_2 = ${s1_str}$$</div>`;
+                expectedQc = `(C1 + C2*t)*exp(${s1_val}*t)`;
+                qc_ans = `(C1 + C2*t)*e^(${s1_str}*t)`;
+                qc_sol = `<div class="equation-highlight">$$Q_c(t) = (C_1 + C_2 t) e^{${s1_str}t}$$</div>`;
+            }
+
+            const qp_val = C * E;
+
             return [
-                { title: 'Characteristic Equation', desc: `Write the characteristic equation for: \\(L\\frac{d^2Q}{dt^2} + R\\frac{dQ}{dt} + \\frac{Q}{C} = E\\)`, hint: `e.g. ${L}*s^2 + ${R}*s + ${(1/C).toFixed(4)}`, answer: () => `${L}*s^2 + ${R}*s + ${1/C}`, check: (ans) => this.checkCharEq(ans),
-                    solution: () => `<p>The characteristic equation is:</p><div class="equation-highlight">$$${L}s^2 + ${R}s + ${(1/C).toFixed(4)} = 0$$</div>` },
-                { title: 'Discriminant', desc: 'Calculate \\(R^2 - 4L/C\\).', hint: 'Enter a number', answer: () => `${disc}`, check: (ans) => Math.abs(parseFloat(ans) - disc) < Math.max(0.1, Math.abs(disc*0.01)),
-                    solution: () => `<p>Discriminant:</p><div class="equation-highlight">$$\\Delta = R^2 - \\frac{4L}{C} = ${R}^2 - \\frac{4 \\times ${L}}{${C}} = ${R*R} - ${(4*L/C).toFixed(4)} = ${disc.toFixed(4)}$$</div><p>Since \\(\\Delta ${disc > 0 ? '> 0' : (disc < 0 ? '< 0' : '= 0')}\\), the circuit is <strong>${caseType}</strong>.</p>` },
-                { title: 'Damping Type', desc: 'Is the circuit <strong>overdamped</strong>, <strong>critically damped</strong>, or <strong>underdamped</strong>?', hint: 'Type: overdamped, critical, or underdamped', answer: () => caseType, check: (ans) => ans.toLowerCase().trim().replace(/ly|_|-| /g, '').includes(caseType.replace('critical','critical')),
-                    solution: () => { let exp = ''; if (caseType === 'overdamped') exp = 'Two distinct real roots → exponential decay without oscillation.'; else if (caseType === 'critical') exp = 'Repeated real root → fastest decay without oscillation.'; else exp = 'Complex conjugate roots → damped oscillation.'; return `<p><strong>${caseType.charAt(0).toUpperCase() + caseType.slice(1)}</strong>: ${exp}</p><div class="equation-highlight">$$\\alpha = \\frac{R}{2L} = ${alpha.toFixed(4)}$$</div>`; } },
-                { title: 'Particular Solution', desc: 'What is the particular (steady-state) solution \\(Q_p\\)?', hint: 'Enter a number (= C × E)', answer: () => `${C*E}`, check: (ans) => Math.abs(parseFloat(ans) - C*E) < Math.max(0.001, Math.abs(C*E*0.01)),
-                    solution: () => `<p>At steady state, \\(dQ/dt = 0\\) and \\(d^2Q/dt^2 = 0\\), so:</p><div class="equation-highlight">$$Q_p = CE = ${C} \\times ${E} = ${(C*E).toFixed(6)}$$</div>` }
+                { title: 'Characteristic Equation', desc: `Write the characteristic equation derived from \\(L\\frac{d^2Q}{dt^2} + R\\frac{dQ}{dt} + \\frac{Q}{C} = E\\)`, hint: `e.g. ${L}*s^2 + ${R}*s + ${(1/C).toFixed(2)} = 0`, answer: () => `${L}*s^2 + ${R}*s + ${1/C}`, check: (ans) => this.checkCharEq(ans),
+                    solution: () => `<p>The homogeneous equation gives the characteristic equation by replacing derivatives with \\(s\\):</p><div class="equation-highlight">$$${L}s^2 + ${R}s + ${(1/C).toFixed(4)} = 0$$</div>` },
+                { title: 'Roots of the Equation', desc: 'Find the roots \\(s_1, s_2\\) of the characteristic equation.', hint: 'e.g. -2, -3 or -2+3i, -2-3i', answer: () => roots_ans, check: (ans) => this.checkRoots(ans, s1_val, s2_val),
+                    solution: () => roots_sol },
+                { title: 'Complementary Solution (Qc)', desc: `Write \\(Q_c(t)\\) using constants \\(C_1, C_2\\) based on the roots (${caseType}).`, hint: 'Use C1, C2, and t', answer: () => qc_ans, check: (ans) => this.checkQc(ans, expectedQc),
+                    solution: () => qc_sol },
+                { title: 'Particular Solution (Qp)', desc: 'Find the steady-state particular solution \\(Q_p\\).', hint: 'Enter a number', answer: () => `${qp_val}`, check: (ans) => Math.abs(parseFloat(ans) - qp_val) < Math.max(0.001, Math.abs(qp_val*0.01)),
+                    solution: () => `<p>At steady state, derivatives are zero. Thus, \\(\\frac{Q_p}{C} = E \\implies Q_p = CE\\).</p><div class="equation-highlight">$$Q_p = ${C} \\times ${E} = ${qp_val.toFixed(6)}$$</div>` },
+                { title: 'Final Equation for Charge Q(t)', desc: 'Write the complete solution \\(Q(t) = Q_c(t) + Q_p\\).', hint: 'Combine Qc and Qp', answer: () => `${qc_ans} + ${qp_val}`, check: (ans) => this.checkQc(ans, `${expectedQc} + ${qp_val}`),
+                    solution: () => `<p>The total charge is the sum of the complementary and particular solutions:</p><div class="equation-highlight">$$Q(t) = ${qc_sol.replace(/<[^>]*>/g, '').replace('Q_c(t) = ', '')} + ${qp_val.toFixed(6)}$$</div>` }
             ];
         }
     },
@@ -168,8 +211,61 @@ const Simulation = {
         } catch { return false; }
     },
 
+    checkRoots(userExpr, s1_val, s2_val) {
+        try {
+            const parts = userExpr.split(',').map(p => math.evaluate(this.normalizeExpr(p.trim())));
+            if (parts.length !== 2) return false;
+            const p1 = parts[0], p2 = parts[1];
+            const match1 = this.compareRoots(p1, s1_val) && this.compareRoots(p2, s2_val);
+            const match2 = this.compareRoots(p1, s2_val) && this.compareRoots(p2, s1_val);
+            return match1 || match2;
+        } catch { return false; }
+    },
+
+    compareRoots(a, b) {
+        const tol = 0.05;
+        const aRe = a.re !== undefined ? a.re : (typeof a === 'number' ? a : 0);
+        const aIm = a.im !== undefined ? a.im : 0;
+        const bRe = b.re !== undefined ? b.re : (typeof b === 'number' ? b : 0);
+        const bIm = b.im !== undefined ? b.im : 0;
+        return Math.abs(aRe - bRe) < tol && Math.abs(aIm - bIm) < tol;
+    },
+
+    checkQc(userExpr, expectedExpr) {
+        try {
+            const uExp = this.normalizeExpr(userExpr);
+            const eExp = this.normalizeExpr(expectedExpr);
+            const testCases = [
+                { t: 0.1, C1: 1, C2: 0 },
+                { t: 0.1, C1: 0, C2: 1 },
+                { t: 0.5, C1: 2, C2: -1 },
+                { t: 1.0, C1: -0.5, C2: 0.5 }
+            ];
+            
+            let matchStandard = true;
+            let matchSwapped = true;
+            
+            for (const tc of testCases) {
+                const uVal = math.evaluate(uExp, tc);
+                const eVal = math.evaluate(eExp, tc);
+                const eValSwapped = math.evaluate(eExp, { t: tc.t, C1: tc.C2, C2: tc.C1 });
+                
+                const tol1 = Math.max(Math.abs(eVal) * 0.05, 0.01);
+                if (Math.abs(uVal - eVal) > tol1) matchStandard = false;
+                
+                const tol2 = Math.max(Math.abs(eValSwapped) * 0.05, 0.01);
+                if (Math.abs(uVal - eValSwapped) > tol2) matchSwapped = false;
+            }
+            return matchStandard || matchSwapped;
+        } catch (e) {
+            return false;
+        }
+    },
+
     normalizeExpr(expr) {
         return expr
+            .replace(/C_1/g, 'C1')
+            .replace(/C_2/g, 'C2')
             .replace(/\^/g, '^')
             .replace(/e\^/g, 'exp')
             .replace(/exp\(([^)]+)\)/g, 'exp($1)')
@@ -177,7 +273,8 @@ const Simulation = {
             .replace(/(\d)([a-zA-Z])/g, '$1*$2')
             .replace(/\)\(/g, ')*(')
             .replace(/(\))(\d)/g, '$1*$2')
-            .replace(/(\d)\(/g, '$1*(');
+            .replace(/(\d)\(/g, '$1*(')
+            .replace(/\bj\b/g, 'i');
     },
 
     showEquation() {
@@ -278,7 +375,7 @@ const Simulation = {
 
     reset() {
         this.currentStep = 0;
-        this.scores = [0, 0, 0, 0];
+        this.scores = new Array(this.totalSteps || 4).fill(0);
         this.started = false;
         document.getElementById('simWorkspace').style.display = 'none';
         document.getElementById('simScoreDisplay').innerHTML = '';
